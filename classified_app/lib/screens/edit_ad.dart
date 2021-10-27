@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../services/auth.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:image_picker/image_picker.dart';
 
 class EditAd extends StatefulWidget {
   List imgURL = [];
@@ -11,7 +12,7 @@ class EditAd extends StatefulWidget {
   String description = "";
   String price = "";
   String mobile = "";
-  // int id;
+  String user = "";
 
   EditAd({
     required this.imgURL,
@@ -19,7 +20,7 @@ class EditAd extends StatefulWidget {
     required this.description,
     required this.price,
     required this.mobile,
-    // required this.id,
+    required this.user,
 
     // required this.user
   });
@@ -35,6 +36,7 @@ class _EditAdState extends State<EditAd> {
       _descriptionUpdate.text = widget.description;
       _priceUpdate.text = widget.price;
       _mobileUpdate.text = widget.mobile;
+      // userID = widget.user;
     });
     super.initState();
   }
@@ -44,25 +46,43 @@ class _EditAdState extends State<EditAd> {
   TextEditingController _priceUpdate = TextEditingController();
   TextEditingController _mobileUpdate = TextEditingController();
 
+  var imagesUpload = [];
+
   Auth _auth = Get.put(Auth());
-  // var _user = {};
+  uploadMultiple() async {
+    try {
+      var images = await ImagePicker().pickMultiImage();
+      var request = http.MultipartRequest(
+          'POST', Uri.parse("https://adlisting.herokuapp.com/upload/photos"));
+      images!.forEach((image) async {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'photos',
+            image.path,
+          ),
+        );
+      });
+      var response = await http.Response.fromStream(await request.send());
+      var data = json.decode(response.body);
+      setState(() {
+        imagesUpload = data['data']['path'];
+      });
+    } catch (e) {}
+  }
 
-  // // String user = "";
-
-  updateProfile() {
+  updateAds() {
     var body = json.encode({
       "title": _titleUpdate.text,
       "price": _priceUpdate.text,
       "mobile": _mobileUpdate.text,
       "description": _descriptionUpdate.text,
-      // "imgURL": _imageUpdate,
+      "imgURL": imagesUpload,
     });
-    print(_titleUpdate.text);
 
     var token = _auth.get();
 
     http
-        .patch(Uri.parse("https://adlisting.herokuapp.com/ads/:"),
+        .patch(Uri.parse("https://adlisting.herokuapp.com/ads/" + widget.user),
             headers: {
               "Content-Type": "application/json",
               "Authorization": "Bearer $token"
@@ -71,10 +91,6 @@ class _EditAdState extends State<EditAd> {
         .then((res) {
       print(res.body);
       print("update");
-      var resp = json.decode(res.body);
-      _auth.set(resp["data"]["token"]);
-
-      // print(resp["data"]["token"]);
     }).catchError((e) {
       print(e);
     });
@@ -99,7 +115,7 @@ class _EditAdState extends State<EditAd> {
 
               // tooltip: 'Increase volume by 10',
               onPressed: () {
-                // uploadMultiple();
+                uploadMultiple();
               },
             ),
             Text('Tap to Upload'),
@@ -185,6 +201,20 @@ class _EditAdState extends State<EditAd> {
                           borderSide: new BorderSide(color: Colors.black26)),
                       // labelText: '$title',
                       labelStyle: TextStyle(color: Colors.black54),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        primary: Colors.deepOrange,
+                        minimumSize: Size(double.infinity, 50)),
+                    onPressed: () {
+                      updateAds();
+                      Get.to(Adds());
+                    },
+                    child: Text(
+                      'Submit Ad ',
+                      style: TextStyle(color: Colors.white, fontSize: 15),
                     ),
                   ),
                 ],

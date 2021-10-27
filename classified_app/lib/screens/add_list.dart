@@ -58,10 +58,11 @@ class _AddsState extends State<Adds> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 Container(
+                    margin: EdgeInsets.only(right: 5),
                     child: Text(
-                  "Ads Listing",
-                  style: TextStyle(fontSize: 18),
-                )),
+                      "Ads Listing",
+                      style: TextStyle(fontSize: 18),
+                    )),
                 GestureDetector(
                   onTap: () => Get.to(Settings()),
                   child: Container(
@@ -90,7 +91,7 @@ class _AddsState extends State<Adds> {
         itemBuilder: (BuildContext context, index) {
           return GestureDetector(
             onTap: () => Get.to(ContactDetail(
-              imgURL: _adds[index]['images'][0],
+              imgURL: _adds[index]['images'],
               // id: _adds[index]['_id'],
               title: _adds[index]['title'],
               description: _adds[index]['description'],

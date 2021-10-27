@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../services/auth.dart';
 import 'package:classified_app/screens/login.dart';
+// import 'package:classified_app/screens/login.dart';
 
 class Profile extends StatefulWidget {
   Profile({Key? key}) : super(key: key);
@@ -81,8 +82,8 @@ class _ProfileState extends State<Profile> {
         .then((res) {
       print(res.body);
       print("update");
-      var resp = json.decode(res.body);
-      _auth.set(resp["data"]["token"]);
+      // var resp = json.decode(res.body);
+      // _auth.set(resp["data"]["token"]);
 
       // print(resp["data"]["token"]);
     }).catchError((e) {
@@ -194,6 +195,7 @@ class _ProfileState extends State<Profile> {
                           minimumSize: Size(double.infinity, 50)),
                       onPressed: () {
                         updateProfile();
+                        Get.to(Profile());
                       },
                       child: Text(
                         'Update Profile',

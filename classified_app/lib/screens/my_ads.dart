@@ -67,6 +67,7 @@ class _MyAdsState extends State<MyAds> {
             return GestureDetector(
                 onTap: () => Get.to(EditAd(
                     imgURL: _ads[index]['images'],
+                    user: _ads[index]['_id'],
                     title: _ads[index]['title'],
                     description: _ads[index]['description'],
                     price: _ads[index]['price'].toString(),

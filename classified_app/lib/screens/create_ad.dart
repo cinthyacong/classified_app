@@ -8,102 +8,70 @@ import 'package:classified_app/screens/add_list.dart';
 import 'package:classified_app/screens/profile.dart';
 import 'package:image_picker/image_picker.dart';
 
-class CreateAd extends StatelessWidget {
-  CreateAd({Key? key}) : super(key: key);
+class CreateAd extends StatefulWidget {
+  // CreateAd({Key? key}) : super(key: key);
 
+  CreateAdState createState() => CreateAdState();
+}
+
+class CreateAdState extends State<CreateAd> {
   TextEditingController _titleCtrl = TextEditingController();
   TextEditingController _descriptionCtrl = TextEditingController();
   TextEditingController _priceCtrl = TextEditingController();
   TextEditingController _mobileCtrl = TextEditingController();
-  TextEditingController _imagesCtrl = TextEditingController();
+  // TextEditingController _imagesCtrl = TextEditingController();
+
+  var imagesUpload = [];
 
   Auth _auth = Get.put(Auth());
-
-//   Future<Album> createAlbum(String title) async {
-//   final response = await http.post(
-//     Uri.parse('https://adlisting.herokuapp.com/ads'),
-//     headers: <String, String>{
-//       'Content-Type': 'application/json; charset=UTF-8',
-//     },
-//     body: jsonEncode(<String, String>{
-//       'title': title,
-//     }),
-//   );
-
-//   if (response.statusCode == 201) {
-//     // If the server did return a 201 CREATED response,
-//     // then parse the JSON.
-//     return Album.fromJson(jsonDecode(response.body));
-//   } else {
-//     // If the server did not return a 201 CREATED response,
-//     // then throw an exception.
-//     throw Exception('Failed to create album.');
-//   }
-// }
-
-  // createAd() {
-  //   var body = json.encode({
-  //     "title": _titleCtrl.text,
-  //     "price": _priceCtrl.text,
-  //     "description": _descriptionCtrl.text,
-  //     "mobile": _mobileCtrl.text,
-  //     // "imgURL": _imageUpdate,
-  //   });
-  //   print(_titleCtrl.text);
-
-  //   var token = _auth.get();
-
-  //   http
-  //       .post(Uri.parse("https://adlisting.herokuapp.com/ads"),
-  //           headers: {
-  //             "Content-Type": "application/json",
-  //             "Authorization": "Bearer $token"
-  //           },
-  //           body: body)
-  //       .then((res) {
-  //     print(res.body);
-  //     print("create");
-  //     var resp = json.decode(res.body);
-  //     _auth.set(resp["data"]["token"]);
-
-  //     // print(resp["data"]["token"]);
-  //   }).catchError((e) {
-  //     print(e);
-  //   });
-  // }
-
   uploadMultiple() async {
-    var images = await ImagePicker().pickMultiImage();
+    try {
+      var images = await ImagePicker().pickMultiImage();
+      var request = http.MultipartRequest(
+          'POST', Uri.parse("https://adlisting.herokuapp.com/upload/photos"));
+      images!.forEach((image) async {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'photos',
+            image.path,
+          ),
+        );
+      });
+      var response = await http.Response.fromStream(await request.send());
+      var data = json.decode(response.body);
+      setState(() {
+        imagesUpload = data['data']['path'];
+      });
+    } catch (e) {}
+  }
+
+  createAd() async {
     var body = json.encode({
       "title": _titleCtrl.text,
-      "price": _priceCtrl.text,
       "description": _descriptionCtrl.text,
+      "price": _priceCtrl.text,
       "mobile": _mobileCtrl.text,
-      "imgURL": images,
-    });
-    var token = _auth.get();
-    var request = http.MultipartRequest(
-        'POST', Uri.parse("https://adlisting.herokuapp.com/ads"));
-    request.headers['Authorization'] = 'Bearer $token';
-
-    images!.forEach((image) async {
-      request.files.add(await http.MultipartFile.fromPath(
-        'uploads',
-        image.path,
-      ));
-
-      request.fields['title'] = _titleCtrl.text;
-      request.fields['price'] = _priceCtrl.text;
-      request.fields['description'] = _descriptionCtrl.text;
-      request.fields['mobile'] = _mobileCtrl.text;
+      "images": imagesUpload,
     });
 
-    var res = await request.send();
-    print(res);
-    var responseData = await res.stream.toBytes();
-    var responseString = String.fromCharCodes(responseData);
-    print(responseString);
-    return res.reasonPhrase;
+    try {
+      var token = _auth.token.value;
+      await http
+          .post(
+        Uri.parse(
+          "https://adlisting.herokuapp.com/ads",
+        ),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: body,
+      )
+          .then((res) {
+        var data = json.decode(res.body);
+        print(data["status"]);
+      }).catchError((e) {});
+    } catch (e) {}
   }
 
   @override
@@ -134,7 +102,7 @@ class CreateAd extends StatelessWidget {
 
                     // tooltip: 'Increase volume by 10',
                     onPressed: () {
-                      // uploadMultiple();
+                      uploadMultiple();
                     },
                   ),
                   Text('Tap to Upload'),
@@ -232,7 +200,8 @@ class CreateAd extends StatelessWidget {
                                 primary: Colors.deepOrange,
                                 minimumSize: Size(double.infinity, 50)),
                             onPressed: () {
-                              // createAd();
+                              createAd();
+                              Get.to(Adds());
                             },
                             child: Text(
                               'Submit Ad ',

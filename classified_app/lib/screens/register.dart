@@ -24,6 +24,8 @@ class Register extends StatelessWidget {
       "mobile": _mobileCtrl.text
     });
     print(_emailCtrl.text);
+    print(_nameCtrl.text);
+    print(body);
 
     http
         .post(Uri.parse("https://adlisting.herokuapp.com/auth/register"),
@@ -33,9 +35,8 @@ class Register extends StatelessWidget {
             body: body)
         .then((res) {
       print(res.body);
-      var resp = json.decode(res.body);
-      print(resp["data"]["token"]);
-      _auth.token.value = resp["data"]["token"];
+      // var resp = json.decode(res.body);
+
       Get.offAll(Adds());
       // _auth.token = resp["data"]["token"];
     }).catchError((e) {
